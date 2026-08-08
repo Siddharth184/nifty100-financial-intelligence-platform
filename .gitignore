@@ -1,0 +1,64 @@
+# ==============================================================================
+# Nifty100 Financial Intelligence Platform - .gitignore
+# ==============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# SQLite Database Instance Files (Keep schema.sql, ignore binary database files)
+db/*.db
+db/*.sqlite
+db/*.sqlite3
+!db/schema.sql
+
+# Raw and Processed Data Files (Contains sensitive/large datasets)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/backup/*
+!data/backup/.gitkeep
+
+# Output and Generated Reports
+output/*
+!output/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# Application Logs
+logs/*
+!logs/.gitkeep
+
+# Jupyter Notebook Checkpoints & Cache
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Testing & Coverage Outputs
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Code Quality & Linter Caches
+.ruff_cache/
+.mypy_cache/
+
+# IDE & OS Specific Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

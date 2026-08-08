@@ -1,0 +1,37 @@
+# ==============================================================================
+# Nifty100 Financial Intelligence Platform - Dependencies (Sprint 1)
+# ==============================================================================
+
+# Data Processing & Analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Database & ORM
+SQLAlchemy>=2.0.0
+
+# Excel File Handling
+openpyxl>=3.1.0
+
+# Dashboard & Visualization
+streamlit>=1.25.0
+plotly>=5.15.0
+
+# PDF Report Generation
+reportlab>=4.0.0
+
+# HTTP Requests & APIs
+requests>=2.31.0
+
+# Environment Variable Management
+python-dotenv>=1.0.0
+
+# Testing Framework
+pytest>=7.4.0
+
+# Code Quality & Formatting
+black>=23.7.0
+ruff>=0.0.280
+
+# Interactive Notebooks
+jupyter>=1.0.0
+ipykernel>=6.25.0

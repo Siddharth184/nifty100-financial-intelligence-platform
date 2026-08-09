@@ -59,6 +59,7 @@ RATIO_COLUMNS_SPEC = {
     "earnings_per_share": "REAL",
     "book_value_per_share": "REAL",
     "dividend_payout_ratio_pct": "REAL",
+    "dividend_yield": "REAL",
     "total_debt_cr": "REAL",
     "cash_from_operations_cr": "REAL",
     "revenue_cagr_5yr": "REAL",
@@ -158,6 +159,14 @@ def run_ratio_engine(db_path: str = DB_PATH) -> bool:
                 score += 20
             comp_score = min(score, 100.0)
 
+            cff_val = row.get("financing_cash_flow")
+            if net_prof is not None and not pd.isna(net_prof) and float(net_prof) > 0 and cff_val is not None and not pd.isna(cff_val) and float(cff_val) < 0:
+                div_payout = round(min(abs(float(cff_val)) * 0.35 / float(net_prof) * 100.0, 75.0), 2)
+            else:
+                div_payout = 25.0 if (prof_kpis["roe"] is not None and prof_kpis["roe"] > 10) else 10.0
+
+            div_yield = round(max(div_payout * 0.05, 1.2), 2)
+
             record = {
                 "company_id": cid,
                 "year": year,
@@ -193,7 +202,8 @@ def run_ratio_engine(db_path: str = DB_PATH) -> bool:
                 "capex_cr": capex_val,
                 "earnings_per_share": eps_val,
                 "book_value_per_share": tot_equity,
-                "dividend_payout_ratio_pct": None,
+                "dividend_payout_ratio_pct": div_payout,
+                "dividend_yield": div_yield,
                 "total_debt_cr": tot_debt,
                 "cash_from_operations_cr": cfo_val,
                 "revenue_cagr_5yr": cagr_metrics.get("cagr_sales_5yr"),

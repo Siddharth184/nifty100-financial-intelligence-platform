@@ -15,6 +15,10 @@ openpyxl>=3.1.0
 # Dashboard & Visualization
 streamlit>=1.25.0
 plotly>=5.15.0
+matplotlib>=3.7.0
+
+# Configuration
+pyyaml>=6.0.0
 
 # PDF Report Generation
 reportlab>=4.0.0

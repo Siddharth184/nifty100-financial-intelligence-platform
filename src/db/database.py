@@ -3,17 +3,16 @@ Database initialization and management entry point for Nifty100 Platform.
 """
 
 import sys
-import os
 from pathlib import Path
 
-# Ensure project root is in sys.path when executed directly
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.utils.logger import get_logger
-from src.db.connection import get_db_connection, execute_query
+from src.db.connection import get_db_connection
 from src.db.loader import create_tables, LOAD_ORDER
+
 
 logger = get_logger(__name__)
 

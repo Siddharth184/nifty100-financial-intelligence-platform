@@ -17,6 +17,8 @@ from src.analytics.leverage_efficiency import compute_leverage_kpis
 from src.analytics.cagr import compute_all_cagr_metrics
 from src.analytics.cashflow_kpi import compute_cashflow_kpis, generate_capital_allocation_report
 
+
+
 logger = get_logger(__name__)
 
 DB_PATH = "db/nifty100.db"
@@ -112,6 +114,31 @@ def run_ratio_engine(db_path: str = DB_PATH) -> bool:
         # Merge financial statements on (company_id, year)
         merged = pd.merge(pnl, bs, on=["company_id", "year"], how="outer", suffixes=('', '_bs'))
         merged = pd.merge(merged, cf, on=["company_id", "year"], how="outer", suffixes=('', '_cf'))
+
+        # Merge raw financial ratios fallback data if statement tables lack borrowings/interest
+        raw_fr_path = "data/raw/financial_ratios.xlsx"
+        if os.path.exists(raw_fr_path):
+            try:
+                from src.etl.normaliser import normalize_year, normalize_ticker
+                raw_fr_df = pd.read_excel(raw_fr_path)
+                if not raw_fr_df.empty and "company_id" in raw_fr_df.columns and "year" in raw_fr_df.columns:
+                    raw_fr_df["company_id"] = raw_fr_df["company_id"].apply(normalize_ticker)
+                    raw_fr_df["year"] = raw_fr_df["year"].apply(normalize_year)
+                    raw_fr_df = raw_fr_df.dropna(subset=["company_id", "year"]).drop_duplicates(subset=["company_id", "year"])
+                    raw_fr_df["year"] = raw_fr_df["year"].astype(int)
+                    raw_fr_df = raw_fr_df.rename(columns={
+                        "debt_to_equity": "raw_debt_to_equity",
+                        "interest_coverage": "raw_interest_coverage",
+                        "total_debt_cr": "raw_total_debt_cr"
+                    })
+                    merged = pd.merge(
+                        merged,
+                        raw_fr_df[["company_id", "year", "raw_debt_to_equity", "raw_interest_coverage", "raw_total_debt_cr"]],
+                        on=["company_id", "year"],
+                        how="left"
+                    )
+            except Exception as e:
+                logger.warning(f"Could not merge raw_fr fallback in ratio_engine: {e}")
 
         # Sort for CAGR calculations
         merged = merged.sort_values(["company_id", "year"])

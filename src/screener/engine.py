@@ -92,11 +92,12 @@ class ScreenerEngine:
             npm_s = winsorize_scale(g.get("net_profit_margin_pct", g.get("npm", pd.Series())))
             prof_score = roe_s * (15/35) + roce_s * (10/35) + npm_s * (10/35)
 
-            # 2. Cash Quality (30%): FCF Conv 15%, CFO Quality 10%, FCF Positive 5%
-            fcf_s = winsorize_scale(g.get("free_cash_flow_cr", g.get("free_cash_flow", pd.Series())))
-            cfo_pat_s = winsorize_scale(g.get("cfo_quality", pd.Series()))
-            fcf_pos = (g.get("free_cash_flow", 0) > 0).astype(float) * 100.0
+            fcf_col = g["free_cash_flow_cr"] if "free_cash_flow_cr" in g.columns else (g["free_cash_flow"] if "free_cash_flow" in g.columns else pd.Series(0.0, index=g.index))
+            fcf_s = winsorize_scale(fcf_col)
+            cfo_pat_s = winsorize_scale(g["cfo_quality"] if "cfo_quality" in g.columns else pd.Series(index=g.index))
+            fcf_pos = (pd.to_numeric(fcf_col, errors='coerce').fillna(0) > 0).astype(float) * 100.0
             cash_score = fcf_s * (15/30) + cfo_pat_s * (10/30) + fcf_pos * (5/30)
+
 
             # 3. Growth (20%): Revenue CAGR 10%, PAT CAGR 10%
             rev_cagr = winsorize_scale(g.get("revenue_cagr_5yr", g.get("cagr_sales_5yr", pd.Series())))
@@ -190,26 +191,44 @@ class ScreenerEngine:
         # 3. Free Cash Flow Min
         if "fcf_min" in filters and filters["fcf_min"] is not None:
             val = float(filters["fcf_min"])
-            col = "free_cash_flow_cr" if "free_cash_flow_cr" in res.columns else "free_cash_flow"
-            res = res[res[col].notna() & (res[col] >= val)]
+            def fcf_check(row):
+                f_val = row.get("free_cash_flow_cr") if row.get("free_cash_flow_cr") is not None else row.get("free_cash_flow")
+                if f_val is not None and not pd.isna(f_val):
+                    return float(f_val) >= val
+                return False
+            res = res[res.apply(fcf_check, axis=1)]
+
 
         # 4. Revenue CAGR 5yr Min
         if "revenue_cagr_5yr_min" in filters and filters["revenue_cagr_5yr_min"] is not None:
             val = float(filters["revenue_cagr_5yr_min"])
-            col = "revenue_cagr_5yr" if "revenue_cagr_5yr" in res.columns else "cagr_sales_5yr"
-            res = res[res[col].notna() & (res[col] >= val)]
+            def rev_check(row):
+                c_val = row.get("revenue_cagr_5yr") if row.get("revenue_cagr_5yr") is not None else row.get("cagr_sales_5yr")
+                if c_val is not None and not pd.isna(c_val):
+                    return float(c_val) >= val
+                return False
+            res = res[res.apply(rev_check, axis=1)]
 
         # 5. PAT CAGR 5yr Min
         if "pat_cagr_5yr_min" in filters and filters["pat_cagr_5yr_min"] is not None:
             val = float(filters["pat_cagr_5yr_min"])
-            col = "pat_cagr_5yr" if "pat_cagr_5yr" in res.columns else "cagr_pat_5yr"
-            res = res[res[col].notna() & (res[col] >= val)]
+            def pat_check(row):
+                c_val = row.get("pat_cagr_5yr") if row.get("pat_cagr_5yr") is not None else row.get("cagr_pat_5yr")
+                if c_val is not None and not pd.isna(c_val):
+                    return float(c_val) >= val
+                return False
+            res = res[res.apply(pat_check, axis=1)]
 
         # 6. OPM Min
         if "opm_min" in filters and filters["opm_min"] is not None:
             val = float(filters["opm_min"])
-            col = "operating_profit_margin_pct" if "operating_profit_margin_pct" in res.columns else "opm"
-            res = res[res[col].notna() & (res[col] >= val)]
+            def opm_check(row):
+                o_val = row.get("operating_profit_margin_pct") if row.get("operating_profit_margin_pct") is not None else row.get("opm")
+                if o_val is not None and not pd.isna(o_val):
+                    return float(o_val) >= val
+                return False
+            res = res[res.apply(opm_check, axis=1)]
+
 
         # 7. P/E Max
         if "pe_max" in filters and filters["pe_max"] is not None:

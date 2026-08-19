@@ -3,8 +3,10 @@
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![FastAPI](https://img.shields.io/badge/FastAPI-1.0.0-009688.svg)](https://fastapi.tiangolo.com/)
+[![Pytest](https://img.shields.io/badge/tests-182%20passed-brightgreen.svg)](https://docs.pytest.org/)
 
-An enterprise-grade, end-to-end data engineering and financial intelligence platform designed to process multi-quarter financial statements of Nifty 100 Indian listed companies, execute automated ETL pipelines, perform schema validation, store relational metrics in SQLite, compute 50+ financial ratios, and deliver interactive executive dashboards.
+An enterprise-grade, end-to-end data engineering and financial intelligence platform designed to process multi-year financial statements of Nifty 100 Indian listed companies, execute automated ETL pipelines, perform schema validation, store relational metrics in SQLite, compute 50+ financial ratios, run KMeans machine learning clustering, serve a 16-endpoint REST API, and deliver interactive Streamlit executive dashboards and PDF tearsheets.
 
 ---
 
@@ -13,23 +15,28 @@ An enterprise-grade, end-to-end data engineering and financial intelligence plat
 - [Project Overview](#-project-overview)
 - [Architecture](#-architecture)
 - [Directory Structure](#-directory-structure)
-- [Technology Stack](#-technology-stack)
+- [Features & Deliverables](#-features--deliverables)
+- [REST API Reference (FastAPI)](#-rest-api-reference-fastapi)
+- [KMeans Clustering & ML Archetypes](#-kmeans-clustering--ml-archetypes)
 - [Environment Setup & Installation](#-environment-setup--installation)
-- [Configuration & Usage](#-configuration--usage)
-- [Project Roadmap](#-project-roadmap)
+- [CLI Commands & Usage](#-cli-commands--usage)
+- [Testing & Quality Assurance](#-testing--quality-assurance)
 
 ---
 
 ## 🏢 Project Overview
 
-Financial analysts and portfolio managers require fast, reliable, and standardized metrics across companies in the Nifty 100 index. Raw financial reports often arrive in unstructured, multi-sheet Excel files with inconsistent naming conventions, missing values, and varying accounting formats.
+Financial analysts and portfolio managers require fast, reliable, and standardized metrics across companies in the Nifty 100 index. Raw financial reports often arrive in unstructured Excel workbooks with varying accounting formats.
 
 The **Nifty100 Financial Intelligence Platform** solves this by providing:
-1. **Automated Excel ETL Pipeline:** Ingests and standardizes 12+ company financial workbooks.
-2. **Schema & Data Quality Validation:** Catches missing fields, mathematical anomalies, and invalid data types before loading.
-3. **Structured Relational Storage:** SQLite database schema supporting company profiles, quarterly earnings, balance sheets, and key performance ratios.
-4. **Financial Analytics Engine:** Computes 50+ financial KPIs (ROE, ROCE, P/E ratio, Debt-to-Equity, Operating Margin, CAGR, etc.).
-5. **Interactive Streamlit Dashboard:** Visually compares sectoral metrics, historical growth trajectories, and valuation multiples.
+1. **Automated Excel ETL Pipeline:** Ingests and standardizes 12 core/supporting financial workbooks across 92 companies over FY2014–FY2024.
+2. **Data Quality Validation:** 14 automated DQ rules catching composite key duplicates, foreign key violations, and balance sheet identity discrepancies.
+3. **Structured Relational Storage:** SQLite database schema (`db/nifty100.db`) with 13 normalized tables.
+4. **Financial Analytics Engine:** Computes 50+ financial KPIs (ROE, ROCE, P/E ratio, D/E, Operating Margin, CAGR, FCF conversion, CFO quality).
+5. **KMeans Machine Learning Clustering:** Classifies 92 companies into 5 financial archetypes using 5 standardized financial features.
+6. **FastAPI REST API Services:** 16 live endpoints for programmatic data access, screening, valuation, peer comparisons, and PDF downloads.
+7. **Interactive Streamlit Dashboard:** 8 executive dashboard pages for interactive exploration.
+8. **Automated PDF Reports:** 2-page institutional company tearsheets and 11-page Analyst User Guide.
 
 ---
 
@@ -43,9 +50,17 @@ The **Nifty100 Financial Intelligence Platform** solves this by providing:
                                                        │
                                                        ▼
 ┌────────────────┐     ┌────────────────┐     ┌────────────────┐
-│   Streamlit    │ ◄───│ Financial KPIs │ ◄───│ Relational DB  │
-│   Dashboard    │     │ Engine (50+)   │     │ (SQLite DB)    │
+│ Streamlit GUI  │ ◄───│ Financial KPIs │ ◄───│ Relational DB  │
+│ & PDF Generator│     │ & ML Engine    │     │ (SQLite DB)    │
 └────────────────┘     └────────────────┘     └────────────────┘
+         ▲                      ▲
+         │                      │
+         └──────────┬───────────┘
+                    │
+           ┌────────────────┐
+           │   FastAPI API  │
+           │ (16 Endpoints) │
+           └────────────────┘
 ```
 
 ---
@@ -55,180 +70,119 @@ The **Nifty100 Financial Intelligence Platform** solves this by providing:
 ```text
 nifty100-financial-intelligence-platform/
 │
-├── config/                   # Configuration files and YAML settings
-│   └── settings.yaml
-│
-├── data/                     # Data storage (ignored by git except .gitkeep)
-│   ├── raw/                  # Inbound raw 12 Excel dataset files
-│   ├── processed/            # Cleaned, standardized CSV/parquet data
-│   └── backup/               # Historical raw data backups
-│
-├── db/                       # Database files and schemas
-│   ├── schema.sql            # DDL database schema creation script
-│   └── nifty100.db           # SQLite database instance
-│
-├── docs/                     # Project documentation and architecture specs
-│
-├── logs/                     # Application runtime logs (rotated daily/by size)
-│
-├── notebooks/                # Jupyter notebooks for exploratory data analysis
-│
-├── output/                   # Audit trails & validation exception logs
-│   ├── load_audit.csv
-│   └── validation_failures.csv
-│
-├── reports/                  # Generated PDF/HTML financial reports
-│
-├── scripts/                  # One-off database migration & setup scripts
-│
-├── src/                      # Source code core package
-│   ├── analytics/            # Financial ratio & KPI calculations (50+ metrics)
-│   ├── config/               # Environment & setting management
-│   │   ├── __init__.py
-│   │   └── config.py
-│   ├── dashboard/            # Streamlit interactive UI application
-│   ├── etl/                  # Extract, Transform, Load components
-│   └── utils/                # Logging and helper utilities
-│       ├── __init__.py
-│       └── logger.py
-│
-├── tests/                    # Automated pytest test suites
-│   ├── unit/
-│   └── integration/
-│
-├── .env                      # Local environment variable configuration
-├── .gitignore                # Git exclusion rules
-├── Makefile                  # Cross-platform command shortcut helper
-├── requirements.txt          # Python dependency requirements
-└── README.md                 # Project README documentation
+├── config/                   # YAML configurations (screener_config.yaml, settings.yaml)
+├── data/raw/                 # Ingested raw Excel workbooks
+├── db/                       # SQLite database (nifty100.db)
+├── docs/                     # OpenAPI schema, analyst_guide.pdf, setup guides
+├── output/                   # Generated reports (cluster_labels.csv, portfolio_stats.csv, etc.)
+├── pages/                    # Streamlit dashboard pages (pg_01 to pg_08)
+├── reports/                  # Generated plots & PDF tearsheets
+│   ├── elbow_plot.png
+│   ├── correlation_heatmap.png
+│   ├── pytest_report.html
+│   └── tearsheets/           # 91 pre-generated company PDF tearsheets
+├── src/                      # Source code modules
+│   ├── analytics/            # Profitability, leverage, cagr, valuation, peer, clustering
+│   ├── api/                  # FastAPI app & 8 router modules
+│   ├── db/                   # SQLite connection & database managers
+│   ├── dashboard/            # Dashboard visualization helpers
+│   ├── etl/                  # Loader, normaliser, validator, dq_rules
+│   ├── nlp/                  # Analysis text parser
+│   ├── qa/                   # Audit & verification scripts
+│   ├── reports/              # ReportLab PDF tearsheet generators
+│   ├── screener/             # Financial Screener Filter Engine
+│   └── utils/                # Logger & helpers
+├── tests/                    # 182 Pytest unit & integration tests
+│   ├── api/                  # FastAPI router integration tests
+│   ├── dq/                   # DQ rule tests
+│   ├── etl/                  # Normaliser & loader tests
+│   └── kpis/                 # Financial ratio tests
+├── main.py                   # Streamlit dashboard entrypoint
+├── run_etl.py                # ETL pipeline runner
+└── requirements.txt          # Python dependencies
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## ⚡ FastAPI REST API Reference
 
-| Category | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Language** | Python 3.10+ | Core programming language |
-| **Data Processing** | Pandas, NumPy, OpenPyXL | Excel ingestion, cleaning, transformation |
-| **Database** | SQLite, SQLAlchemy | Relational data persistence & ORM |
-| **Dashboard** | Streamlit, Plotly | Interactive web UI & financial charting |
-| **Reporting** | ReportLab | Automated PDF report generation |
-| **Testing & Quality** | Pytest, Black, Ruff | Unit testing, code formatting, linting |
-| **Environment** | python-dotenv | Environment variable configuration |
+The FastAPI service exposes 16 REST endpoints under the `/api/v1` prefix. Interactive Swagger documentation is available at `/docs`.
+
+| Endpoint | Method | Description |
+|:---|:---:|:---|
+| `/api/v1/health` | GET | System health check & DB table row counts |
+| `/api/v1/companies` | GET | List 92 companies (optional sector/search filters) |
+| `/api/v1/companies/{ticker}` | GET | Full company profile + latest KPIs + cluster assignment |
+| `/api/v1/companies/{ticker}/pl` | GET | Historical Income Statement |
+| `/api/v1/companies/{ticker}/bs` | GET | Historical Balance Sheet |
+| `/api/v1/companies/{ticker}/cashflow` | GET | Historical Cash Flow Statement |
+| `/api/v1/companies/{ticker}/ratios` | GET | Annual Financial Ratios history |
+| `/api/v1/companies/{ticker}/tearsheet` | GET | Download 2-page company PDF tearsheet |
+| `/api/v1/screener` | GET | Screen universe with preset/custom filters |
+| `/api/v1/sectors` | GET | List 10 broad sectors with summary stats |
+| `/api/v1/sectors/{sector}/companies` | GET | Companies in a given sector |
+| `/api/v1/peers/{group_name}` | GET | Peer group percentile rankings |
+| `/api/v1/companies/{ticker}/peers/compare` | GET | Peer radar comparison data |
+| `/api/v1/market-cap/{ticker}` | GET | Market cap and valuation multiple history |
+| `/api/v1/portfolio/stats` | GET | P10..P90 universe metric distributions |
+| `/api/v1/companies/{ticker}/documents` | GET | Annual report links with URL validity flag |
 
 ---
 
-## ⚙️ Environment Setup & Installation
+## 🤖 KMeans Clustering & ML Archetypes
 
-### 1. Clone Repository
+All 92 Nifty 100 companies are clustered using Scikit-Learn KMeans (`n_clusters=5, random_state=42`) on 5 standardized financial features:
+1. `return_on_equity_pct` (ROE)
+2. `debt_to_equity` (D/E)
+3. `revenue_cagr_5yr` (5-Year Sales Growth)
+4. `pat_cagr_5yr` (5-Year Net Profit Growth)
+5. `operating_profit_margin_pct` (OPM)
+
+### Archetype Classifications:
+- **High-Quality Compounders**: Superior ROE (>20%), robust CAGR, low leverage.
+- **Defensive Stalwarts**: Stable margins, moderate growth, low debt.
+- **Emerging Growth**: High revenue expansion, aggressive reinvestment.
+- **Value Cyclicals**: Capital intensive, moderate ROE.
+- **Leveraged Turnaround**: High leverage, recovering profitability.
+
+---
+
+## 🛠️ Environment Setup & Installation
+
 ```bash
-git clone https://github.com/your-username/nifty100-financial-intelligence-platform.git
+# Clone the repository
+git clone https://github.com/Siddharth184/nifty100-financial-intelligence-platform.git
 cd nifty100-financial-intelligence-platform
-```
 
-### 2. Create Virtual Environment
-- **Windows (PowerShell):**
-  ```powershell
-  python -m venv venv
-  .\venv\Scripts\Activate.ps1
-  ```
-- **Linux / macOS:**
-  ```bash
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
-
-### 3. Install Dependencies
-```bash
-make install
-# or manually:
+# Install dependencies
 pip install -r requirements.txt
 ```
 
 ---
 
-## 🚀 Configuration & Usage
-
-1. **Configure `.env` Environment File:**
-   ```env
-   APP_NAME="Nifty100 Financial Intelligence Platform"
-   ENVIRONMENT="development"
-   LOG_LEVEL="INFO"
-   DATABASE_URL="sqlite:///db/nifty100.db"
-   ```
-
-2. **Verify Configuration & Logger:**
-   ```bash
-   python -m src.config.config
-   python -m src.utils.logger
-   ```
-
-3. **Format & Lint Codebase:**
-   ```bash
-   make format
-   make lint
-   ```
-
----
-
-## 🗺️ Project Roadmap
-
-- [x] **Sprint 1:** Project setup, virtual environment, logging, config, Git, database schema design, Excel ETL pipeline & data validation.
-- [x] **Sprint 2:** Financial analytics engine (50+ ratios & KPIs computation).
-- [x] **Sprint 3:** Screener engine (6 presets, 15 filterable metrics), peer percentile engine (11 groups, 10 metrics), radar charts, formatted Excel reports.
-- [x] **Sprint 4:** 8-screen Streamlit dashboard, valuation module (FCF yield, P/E flags), CSV export, integration QA.
-
----
-
-## 📊 Dashboard (Sprint 4)
-
-### Run the Dashboard
+## 🚀 CLI Commands & Usage
 
 ```bash
-streamlit run src/dashboard/app.py
+# 1. Run the full ETL pipeline & populate SQLite DB
+python run_etl.py
+
+# 2. Run KMeans Clustering & Statistics Generation
+python -m src.analytics.clustering
+
+# 3. Launch FastAPI Server (Port 8000)
+uvicorn src.api.main:app --port 8000
+
+# 4. Launch Interactive Streamlit Executive Dashboard (Port 8501)
+streamlit run main.py
+
+# 5. Run Full Pytest Test Suite (182 tests)
+pytest --html=reports/pytest_report.html --self-contained-html
 ```
 
-The dashboard opens at **http://localhost:8501** with wide layout and sidebar navigation.
+---
 
-### 8 Screens
+## 🧪 Testing & Quality Assurance
 
-| # | Screen | Description |
-| :--- | :--- | :--- |
-| 1 | **🏠 Home** | 6 KPI tiles (Avg ROE, Median P/E, Median D/E, Total Companies, Median Rev CAGR 5Y, Debt-Free count), sector donut chart, top-5 quality score table, year selector (2019–2024) |
-| 2 | **🏢 Company Profile** | Company search with autocomplete, company card, 6 KPI tiles, 10-year Revenue & Net Profit bar chart, ROE & ROCE dual-axis line chart, pros/cons badges |
-| 3 | **🔍 Screener** | 10 metric sliders, 6 preset buttons (Quality, Value, Growth, Dividend, Debt-Free, Turnaround), live results table, CSV download, result count |
-| 4 | **👥 Peer Comparison** | 11 peer group dropdown, Plotly Scatterpolar radar chart (company vs peer average), side-by-side KPI table with benchmark highlight |
-| 5 | **📈 Trend Analysis** | Company search, multi-metric selector (max 3), 10-year line chart with YoY % change annotations |
-| 6 | **🏭 Sector Analysis** | Sector dropdown, bubble chart (X=Revenue, Y=ROE, size=Market Cap), sector median KPI bar chart |
-| 7 | **💰 Capital Allocation** | Plotly treemap of 92 companies grouped by 8 capital allocation patterns, expandable company lists |
-| 8 | **📄 Annual Reports** | Company search, available report years, BSE PDF links, unavailable report badges |
-
-### Valuation Module
-
-The valuation module (`src/analytics/valuation.py`) computes:
-
-- **FCF Yield:** `FCF / Market Cap × 100`
-- **Sector Median P/E:** Median P/E for each broad sector in the latest year
-- **Overvaluation Flags:**
-  - `Caution` — P/E > Sector Median × 1.5
-  - `Discount` — P/E < Sector Median × 0.7
-  - `Fair` — Otherwise
-
-**Outputs:**
-- `output/valuation_summary.xlsx` — 92 companies with P/E, P/B, EV/EBITDA, FCF yield, 5-year median P/E, flag
-- `output/valuation_flags.csv` — Only Caution and Discount flagged companies
-
-### Data Limitations
-
-- **Dividend Yield:** Source data unavailable in raw Screener.in export files. Screener presets requiring Dividend Yield (Value Pick, Dividend Champion) return 0 results. This is a data limitation, not a logic error.
-- **Dividend Payout:** Source data unavailable. `dividend_payout_ratio_pct` is NULL for all records.
-- **EV/EBITDA:** Approximated using `Market Cap / Operating Profit` since raw EBITDA is not available in the dataset.
-
-### Missing Data Handling
-
-All dashboard screens handle missing data safely:
-- Numeric `None`/`NaN` values display as **N/A**
-- Companies with fewer than 10 years of data show available data only
-- Screener with extreme slider values returns 0 results without crashing
-- Annual report URLs that are missing show a red "Report unavailable" badge
+- **182 Passed Unit & Integration Tests** (0 Failures)
+- Automated HTML Test Report generated at `reports/pytest_report.html`
+- Strict non-fabrication rule enforced: Missing data (e.g. JIOFIN <3yrs, ATGL 0 cashflow rows) is handled without synthetic data generation.

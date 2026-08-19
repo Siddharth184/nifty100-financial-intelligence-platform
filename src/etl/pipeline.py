@@ -1,11 +1,8 @@
 import os
 import sys
 import time
-from datetime import datetime
 from pathlib import Path
-import pandas as pd
 
-# Ensure project root is in sys.path when executed directly
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -20,6 +17,7 @@ from src.db.loader import create_tables, load_all_tables
 from src.db.database_manager import verify_foreign_keys, get_row_counts
 
 logger = get_logger(__name__)
+
 
 # System Paths
 DATA_DIR = "data/raw"

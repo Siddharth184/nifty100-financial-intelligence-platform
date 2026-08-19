@@ -12,12 +12,10 @@ Automates Sprint 2 release validation:
 
 import os
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
-import pandas as pd
-import sqlite3
+from typing import List, Tuple
+
 
 # Ensure project root is in sys.path when executed directly
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent

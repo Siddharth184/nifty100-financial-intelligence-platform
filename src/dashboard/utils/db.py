@@ -8,18 +8,45 @@ at db/nifty100.db without modifying any data.
 
 import sqlite3
 import os
+from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "..", "db", "nifty100.db")
-DB_PATH = os.path.abspath(DB_PATH)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+DB_PATH = str((PROJECT_ROOT / "db" / "nifty100.db").resolve())
+PROS_CONS_CSV = str((PROJECT_ROOT / "output" / "pros_cons_generated.csv").resolve())
+
+
+def verify_database() -> bool:
+    """Verifies that DB_PATH exists and required tables exist."""
+    if not os.path.exists(DB_PATH):
+        st.error(f"Database file not found at {DB_PATH}. Please ensure db/nifty100.db exists.")
+        return False
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        tables = [row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+        if "peer_percentiles" not in tables:
+            conn.close()
+            from src.analytics.peer import compute_peer_percentiles
+            compute_peer_percentiles(DB_PATH)
+        else:
+            cnt = conn.execute("SELECT COUNT(*) FROM peer_percentiles").fetchone()[0]
+            conn.close()
+            if cnt == 0:
+                from src.analytics.peer import compute_peer_percentiles
+                compute_peer_percentiles(DB_PATH)
+    except Exception:
+        pass
+    return True
 
 
 def _get_conn():
-    """Returns a read-only SQLite connection."""
+    """Returns a read-only SQLite connection after verifying database integrity."""
+    verify_database()
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
+
 
 
 @st.cache_data(ttl=600)
@@ -220,7 +247,23 @@ def get_proscons(ticker: str) -> pd.DataFrame:
     """
     df = pd.read_sql_query(query, conn, params=[ticker])
     conn.close()
+    if df.empty and os.path.exists(PROS_CONS_CSV):
+        try:
+            gen_df = pd.read_csv(PROS_CONS_CSV)
+            comp_rules = gen_df[gen_df["company_id"] == ticker]
+            if not comp_rules.empty:
+                pros_list = comp_rules[comp_rules["type"] == "pro"]["text"].tolist()
+                cons_list = comp_rules[comp_rules["type"] == "con"]["text"].tolist()
+                df = pd.DataFrame([{
+                    "company_id": ticker,
+                    "year": 2024,
+                    "pros": "\n".join(pros_list),
+                    "cons": "\n".join(cons_list)
+                }])
+        except Exception:
+            pass
     return df
+
 
 
 @st.cache_data(ttl=600)

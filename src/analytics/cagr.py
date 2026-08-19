@@ -9,9 +9,9 @@ Computes 3-Year, 5-Year, and 10-Year CAGR for:
 Handles edge cases (Negative base, Turnaround, Zero base, Insufficient history).
 """
 
-from typing import Dict, Any, List, Optional, Tuple
-import numpy as np
+from typing import Dict, Any, Optional, Tuple
 import pandas as pd
+
 
 def calculate_cagr(start_val: Optional[float], end_val: Optional[float], n_years: int) -> Tuple[Optional[float], str]:
     """

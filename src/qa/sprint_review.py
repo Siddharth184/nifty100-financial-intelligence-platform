@@ -1,30 +1,16 @@
 """
 Sprint 1 Review & Sign-Off Automation Module.
-
-This module automates the full Sprint 1 review process:
-1. Row count verification for all 12 tables
-2. Foreign key integrity check via PRAGMA
-3. Audit CSV review (load_audit.csv)
-4. DQ report review (validation_failures.csv)
-5. ETL Health Report generation
-6. Sprint Review Report with sign-off checklist
-
-Enterprise Context:
-    Before any data platform goes live, a formal release validation
-    is performed. This module automates those checks so they are
-    reproducible, timestamped, and auditable.
+Automates release verification and health checks for Sprint 1 data loading.
 """
 
 import os
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 
-# Ensure project root is in sys.path when executed directly
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -35,6 +21,7 @@ from src.db.database_manager import verify_foreign_keys, get_row_counts
 from src.db.loader import LOAD_ORDER
 
 logger = get_logger(__name__)
+
 
 # Paths
 DB_PATH = "db/nifty100.db"

@@ -48,7 +48,7 @@ SCREENS = {
     "Annual Reports": "reports",
 }
 
-selected = st.sidebar.radio("", list(SCREENS.keys()), label_visibility="collapsed")
+selected = st.sidebar.radio("Navigation", list(SCREENS.keys()), label_visibility="collapsed")
 screen_key = SCREENS[selected]
 
 st.sidebar.markdown("<hr style='margin: 20px 0 12px 0;'>", unsafe_allow_html=True)

@@ -1,2 +1,2 @@
 timestamp,table_name,rows_read,rows_inserted,rows_rejected,status,error_message,execution_time_sec
-2026-08-09T13:33:58.742815,companies,1,0,1,FAILED,'company_name',0.0014
+2026-08-19T22:51:40.234837,companies,1,0,1,FAILED,'company_name',0.0011

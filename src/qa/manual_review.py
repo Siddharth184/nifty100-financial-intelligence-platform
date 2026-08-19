@@ -1,21 +1,10 @@
 """
 Manual Data Quality Review & ETL Verification Module.
-
-This module provides tools for a human analyst to manually verify
-that the ETL pipeline loaded accurate data by comparing original
-Excel source files against the SQLite database.
-
-Enterprise QA Context:
-    Automated DQ rules check structural integrity (missing keys, negative
-    values). Manual review catches *semantic* errors: data that is
-    structurally valid but meaningfully wrong. Banks and financial
-    institutions perform this after every major ETL run.
+Compares raw Excel source files against database tables for manual validation.
 """
 
 import os
 import sys
-import random
-import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -23,7 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-# Ensure project root is in sys.path when executed directly
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -35,6 +24,7 @@ from src.etl.normaliser import normalize_ticker, normalize_year
 from src.db.connection import get_db_connection
 
 logger = get_logger(__name__)
+
 
 # Default paths
 DB_PATH = "db/nifty100.db"

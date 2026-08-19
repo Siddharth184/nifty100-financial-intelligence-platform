@@ -14,13 +14,13 @@ Generates:
 """
 
 import os
-import sqlite3
 import pandas as pd
 import numpy as np
 from src.utils.logger import get_logger
 from src.db.connection import get_db_connection
 
 logger = get_logger(__name__)
+
 
 DB_PATH = "db/nifty100.db"
 OUTPUT_VALUATION_XLSX = "output/valuation_summary.xlsx"
